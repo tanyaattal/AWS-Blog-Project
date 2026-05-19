@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import './App.css'
 import { generateClient } from 'aws-amplify/data'
 import type {Schema} from '../amplify/data/resource'
@@ -78,9 +78,9 @@ function App() {
 }
   async function deletePost(id: string) {
     try {
-      const deletedPost =await client.models.Post.delete(id);
+      const deletedPost = await client.models.Post.delete(id);
       console.log('Post deleted successfully:', deletedPost);
-      console.log(deletedPost.id);
+      console.log('Post ID: ', deletedPost.id);
       if(deletedPost.errors) {
         console.error('Error deleting post:', deletedPost.errors);
         alert('Failed to delete post. Please try again.');
