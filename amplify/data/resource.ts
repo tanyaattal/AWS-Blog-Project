@@ -1,4 +1,5 @@
 import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
+import { createDeflate } from "zlib";
 
 const schema = a.schema({
   BlogResponse: a.customType({
@@ -25,9 +26,19 @@ const schema = a.schema({
       createdAt: a.datetime(),
     })
     .authorization((allow) => [
-      allow.owner()])
-});
+      allow.owner()]),
 
+
+  Prompt: a
+    .model({
+          id: a.id(),
+          notes: a.string().array().required(),
+          instruction: a.string().required(), 
+          createdAt: a.datetime(),
+        }) 
+        .authorization((allow) => [allow.publicApiKey()])
+ })
+ 
 export type Schema = ClientSchema<typeof schema>;
 
 export const data = defineData({

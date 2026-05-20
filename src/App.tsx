@@ -15,7 +15,7 @@ function App() {
   const [posts, setPosts] = useState<Post[]>([]);
   //useEffect(() => {loadPosts();}, []);
 
-  async function generateBlog() {
+  async function generateBlog(id: string, instruction: string) {
       const noteArray = notes
         .split("\n")
         .map((line) => line.trim())
@@ -27,6 +27,12 @@ function App() {
         });
         console.log("Generated blog response:", response);
         console.log("FULL RESPONSE:", JSON.stringify(response, null, 2));
+        await client.models.Prompt.create ({
+            id,
+            notes,
+            instruction,
+            createdAt: new Date().toISOString(),
+        });
         if (response.errors) {
           console.error("Error generating blog:", response.errors);
           alert("Failed to generate blog post. Please try again.");
@@ -43,7 +49,7 @@ function App() {
     try {
       const newPost = await client.models.Post.create({
         title: 'My AWS Learning Blog',
-        content: blogPost,
+        content: blogPost, 
         createdAt: new Date().toISOString() 
       });
       console.log('Post saved successfully:', newPost);
@@ -109,7 +115,7 @@ function App() {
                   <textarea value={notes} onChange={(e) => setNotes(e.target.value)}
                       placeholder="Example&#10;- Learnt about AWS Amplify, a tool to build cloud-powered apps faster.&#10;- Explored how to use Amplify's Data API to create and manage data models.&#10;- Created a simple blog post model and saved my first post using Amplify's client."
                     />
-                    <button onClick={generateBlog}>Generate Blog Post</button>
+                    <button onClick={() => generateBlog('some-id', 'Some instruction')}>Generate Blog Post</button>
                     <button onClick={savePost} disabled={!blogPost}>Save Blog Post</button>
                     <button onClick={loadPosts}>Load All Posts</button>
                     {blogPost && (
@@ -142,4 +148,4 @@ function App() {
     );
 }
 
-export default App;
+export default App; 
