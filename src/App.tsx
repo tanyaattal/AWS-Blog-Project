@@ -2,6 +2,8 @@ import { useState } from 'react'
 import './App.css'
 import { generateClient } from 'aws-amplify/data'
 import type {Schema} from '../amplify/data/resource'
+import {Authenticator} from '@aws-amplify/ui-react'
+import '@aws-amplify/ui-react/styles.css'; 
 
 type Post = any;
 const client = generateClient<Schema>() as any;
@@ -95,18 +97,23 @@ function App() {
   
   }
     return (
-      <main className='app'> 
-        <section className='card'>
-          <h1>My Learning Blog</h1>
-          <p>Add a few bullet points about you learnt/did today.</p>
-          <textarea value={notes} onChange={(e) => setNotes(e.target.value)}
-              placeholder="Example&#10;- Learnt about AWS Amplify, a tool to build cloud-powered apps faster.&#10;- Explored how to use Amplify's Data API to create and manage data models.&#10;- Created a simple blog post model and saved my first post using Amplify's client."
-            />
-            <button onClick={generateBlog}>Generate Blog Post</button>
-            <button onClick={savePost} disabled={!blogPost}>Save Blog Post</button>
-            <button onClick={loadPosts}>Load All Posts</button>
-            {blogPost && (
-              <section className='output'>  
+      <Authenticator>
+        {({signOut, user}) => (
+          <main>
+            <h1>Hello {user.signInDetails.loginId || 'User'}!</h1>
+            <button onClick={signOut}>Sign out</button>
+              <div className='app'> 
+                <section className='card'>
+                  <h1>My Learning Blog</h1>
+                  <p>Add a few bullet points about you learnt/did today.</p>
+                  <textarea value={notes} onChange={(e) => setNotes(e.target.value)}
+                      placeholder="Example&#10;- Learnt about AWS Amplify, a tool to build cloud-powered apps faster.&#10;- Explored how to use Amplify's Data API to create and manage data models.&#10;- Created a simple blog post model and saved my first post using Amplify's client."
+                    />
+                    <button onClick={generateBlog}>Generate Blog Post</button>
+                    <button onClick={savePost} disabled={!blogPost}>Save Blog Post</button>
+                    <button onClick={loadPosts}>Load All Posts</button>
+                    {blogPost && (
+                <section className='output'>  
                 <h2>Generated Blog Post</h2>
                 <p>{blogPost}</p>
               </section>        
@@ -120,7 +127,6 @@ function App() {
                     <h3>{post.title}</h3>
                     <p>{post.content}</p>
                     <small>{new Date(post.createdAt).toLocaleString()}</small>
-
                     <button onClick={() => deletePost(post.id)}>
                       Delete
                     </button>
@@ -129,7 +135,10 @@ function App() {
               </section>
             )}
         </section>
+        </div>
       </main>
+        )}
+      </Authenticator>
     );
 }
 

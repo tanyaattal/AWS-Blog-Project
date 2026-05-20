@@ -6,19 +6,17 @@ const schema = a.schema({
     error: a.string(),
   }),
 
-  generateBlog: a
-    .query()
+  generateBlog: a.generation({
+      aiModel: a.ai.model("Claude Sonnet 4.5"),
+      systemPrompt: "You are a helpful assistant that generates a blog post based on the user's notes. The user will provide you with a list of notes, and you will use those notes to create a well-structured and engaging blog post. Make sure to cover all the key points mentioned in the notes and organize the content in a logical manner. The blog post should be informative, easy to read, and should provide value to the readers. And follow the specific user instructions for tone and style.",
+    })
     .arguments({
       notes: a.string().array(),
+      instruction: a.string(),
     })
     .returns(a.ref("BlogResponse"))
     .authorization((allow) => [allow.publicApiKey()])
-    .handler(
-      a.handler.custom({
-        entry: "./bedrock.js",
-        dataSource: "bedrockDS",
-      })
-    ),
+    ,
 
   Post: a
     .model({
@@ -27,8 +25,7 @@ const schema = a.schema({
       createdAt: a.datetime(),
     })
     .authorization((allow) => [
-      allow.publicApiKey().to(["create", "read", "update", "delete"]),
-    ]),
+      allow.owner()])
 });
 
 export type Schema = ClientSchema<typeof schema>;
