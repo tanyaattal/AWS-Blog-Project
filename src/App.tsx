@@ -8,13 +8,14 @@ import '@aws-amplify/ui-react/styles.css';
 type Post = any;
 const client = generateClient<Schema>() as any;
 console.log('Available models: ', client.models);
-const {data : Prompt} = await client.models.Prompt.list();
-console.log('Prompt data: ', Prompt);
+//const {data : Prompt} = await client.models.Prompt.list();
+//console.log('Prompt data: ', Prompt);
 
 function App() {
   const [notes, setNotes] = useState('');
   const [blogPost, setBlogPost] = useState('');
   const [posts, setPosts] = useState<Post[]>([]);
+  const [prompts, setPrompts] = useState<any[]>([])
   //useEffect(() => {loadPosts();}, []);
 
   async function generateBlog(id: string, instruction: string) {
@@ -31,10 +32,11 @@ function App() {
         console.log("FULL RESPONSE:", JSON.stringify(response, null, 2));
         await client.models.Prompt.create ({
             id,
-            notes,
+            notes: noteArray,
             instruction,
             createdAt: new Date().toISOString(),
         });
+        await loadPrompts();
         if (response.errors) {
           console.error("Error generating blog:", response.errors);
           alert("Failed to generate blog post. Please try again.");
@@ -88,7 +90,7 @@ function App() {
 }
   async function deletePost(id: string) {
     try {
-      const deletedPost = await client.models.Post.delete(id);
+      const deletedPost = await client.models.Post.delete({ id });
       console.log('Post deleted successfully:', deletedPost);
       console.log('Post ID: ', deletedPost.id);
       if(deletedPost.errors) {
@@ -104,6 +106,17 @@ function App() {
     }
   
   }
+
+  async function loadPrompts() {
+    const result = await client.models.Prompt.list();
+    console.log('Loaded prompts:', result);
+    if (result.errors) {
+      console.error('Error loading prompts:', result.errors);
+      return;
+    } 
+    setPrompts(result.data);
+    }
+
     return (
       <Authenticator>
         {({signOut, user}) => (
@@ -143,12 +156,13 @@ function App() {
               </section>
             )}
 
-            {Prompt.map((prompt) => (
+            {prompts.map((prompt) => (
               <div key={prompt.id}>
                 <h3>Prompt ID: {prompt.id}</h3>
                 <p>Notes: {prompt.notes.join(", ")}</p>
                 <p>Instruction: {prompt.instruction}</p>
                 <small>{new Date(prompt.createdAt).toLocaleString()}</small>
+                <button onClick={loadPrompts}>Load Prompts</button>
               </div>  
             ))}
         </section>
