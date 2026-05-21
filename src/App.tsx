@@ -8,6 +8,8 @@ import '@aws-amplify/ui-react/styles.css';
 type Post = any;
 const client = generateClient<Schema>() as any;
 console.log('Available models: ', client.models);
+const {data : Prompt} = await client.models.Prompt.list();
+console.log('Prompt data: ', Prompt);
 
 function App() {
   const [notes, setNotes] = useState('');
@@ -140,6 +142,15 @@ function App() {
                 ))}
               </section>
             )}
+
+            {Prompt.map((prompt) => (
+              <div key={prompt.id}>
+                <h3>Prompt ID: {prompt.id}</h3>
+                <p>Notes: {prompt.notes.join(", ")}</p>
+                <p>Instruction: {prompt.instruction}</p>
+                <small>{new Date(prompt.createdAt).toLocaleString()}</small>
+              </div>  
+            ))}
         </section>
         </div>
       </main>
