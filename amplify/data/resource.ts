@@ -16,7 +16,9 @@ const schema = a.schema({
       instruction: a.string(),
     })
     .returns(a.ref("BlogResponse"))
-    .authorization((allow) => [allow.publicApiKey()])
+    .authorization((allow) => [
+  allow.authenticated()
+])
     ,
 
   Post: a
@@ -26,7 +28,8 @@ const schema = a.schema({
       createdAt: a.datetime(),
     })
     .authorization((allow) => [
-      allow.owner()]),
+      allow.owner()
+      ]),
 
 
   Prompt: a
@@ -36,8 +39,9 @@ const schema = a.schema({
           instruction: a.string().required(), 
           createdAt: a.datetime(),
         }) 
-        .authorization((allow) => [allow.publicApiKey()])
+        .authorization((allow) => [allow.owner()])
  })
+
  
 export type Schema = ClientSchema<typeof schema>;
 

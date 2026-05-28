@@ -6,47 +6,58 @@ import {Authenticator} from '@aws-amplify/ui-react'
 import '@aws-amplify/ui-react/styles.css'; 
 
 type Post = any;
-const client = generateClient<Schema>() as any;
-console.log('Available models: ', client.models);
 //const {data : Prompt} = await client.models.Prompt.list();
 //console.log('Prompt data: ', Prompt);
 
 function App() {
+  const client = generateClient<Schema>({
+  authMode: "userPool",
+}) as any;
+  console.log("ALL CLIENT:", client);
+  console.log("QUERY KEYS:", Object.keys(client.queries ?? {}));
+  console.log("MODEL KEYS:", Object.keys(client.models ?? {}));
+  console.log('Available models: ', client.models);
   const [notes, setNotes] = useState('');
   const [blogPost, setBlogPost] = useState('');
   const [posts, setPosts] = useState<Post[]>([]);
   const [prompts, setPrompts] = useState<any[]>([])
   //useEffect(() => {loadPosts();}, []);
+  console.log(client);
+  console.log(client.queries);
 
-  async function generateBlog(id: string, instruction: string) {
+  async function generateBlog(instruction: string) {
       const noteArray = notes
         .split("\n")
         .map((line) => line.trim())
         .filter((line) => line.length > 0);
 
       try {
-        const response = await client.queries.generateBlog({
-          notes: noteArray,
+        console.log("Available generations:", Object.keys(client.generations ?? {}));        
+        const response = await client.generations.generateBlog({
+          notes: noteArray,   
+          instruction,     
         });
         console.log("Generated blog response:", response);
         console.log("FULL RESPONSE:", JSON.stringify(response, null, 2));
         await client.models.Prompt.create ({
-            id,
             notes: noteArray,
             instruction,
             createdAt: new Date().toISOString(),
         });
-        await loadPrompts();
         if (response.errors) {
-          console.error("Error generating blog:", response.errors);
-          alert("Failed to generate blog post. Please try again.");
+            console.log(
+              "FULL ERRORS:",
+              JSON.stringify(response.errors, null, 2)
+            ); alert("Failed to generate blog post. Please try again.");
           return;
         }
-        setBlogPost(response.data?.body || "");
+        setBlogPost(response.data?.body || ""); 
       } catch (error) {
         console.error("Error generating blog:", error);
         alert("Failed to generate blog post. Please try again.");
       }
+      await loadPrompts();
+
     }
 
   async function savePost() {
@@ -58,7 +69,10 @@ function App() {
       });
       console.log('Post saved successfully:', newPost);
       if(newPost.errors) {
-      console.error('Error saving post:', newPost.errors);
+      console.log(
+              "FULL ERRORS:",
+              JSON.stringify(newPost.errors, null, 2)
+            );
       alert('Failed to save post. Please try again.');
       return;
     } alert ('Post saved successfully!'); 
@@ -68,6 +82,7 @@ function App() {
       alert('Failed to save post. Please try again.');
     }   
   }
+  
   async function loadPosts() {
   try {
     const allPosts = await client.models.Post.list();
@@ -108,14 +123,24 @@ function App() {
   }
 
   async function loadPrompts() {
-    const result = await client.models.Prompt.list();
+    try {
+       const result = await client.models.Prompt.list();
     console.log('Loaded prompts:', result);
     if (result.errors) {
       console.error('Error loading prompts:', result.errors);
       return;
     } 
     setPrompts(result.data);
+    const chronologicalPrompts = result.data.sort((a, b) => {
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+    console.log("Loaded prompts:", chronologicalPrompts);
+    setPrompts(chronologicalPrompts);
+   } catch(error) {
+      console.error('Error loading prompts:', error);
+      alert('Failed to load prompts. Please try again.'); 
     }
+  }
 
     return (
       <Authenticator>
@@ -130,7 +155,7 @@ function App() {
                   <textarea value={notes} onChange={(e) => setNotes(e.target.value)}
                       placeholder="Example&#10;- Learnt about AWS Amplify, a tool to build cloud-powered apps faster.&#10;- Explored how to use Amplify's Data API to create and manage data models.&#10;- Created a simple blog post model and saved my first post using Amplify's client."
                     />
-                    <button onClick={() => generateBlog('some-id', 'Some instruction')}>Generate Blog Post</button>
+                    <button onClick={() => generateBlog('Some instruction')}>Generate Blog Post</button>
                     <button onClick={savePost} disabled={!blogPost}>Save Blog Post</button>
                     <button onClick={loadPosts}>Load All Posts</button>
                     {blogPost && (
@@ -156,13 +181,14 @@ function App() {
               </section>
             )}
 
+            <button onClick={loadPrompts}>Load Prompts</button>
+            
             {prompts.map((prompt) => (
               <div key={prompt.id}>
                 <h3>Prompt ID: {prompt.id}</h3>
                 <p>Notes: {prompt.notes.join(", ")}</p>
                 <p>Instruction: {prompt.instruction}</p>
                 <small>{new Date(prompt.createdAt).toLocaleString()}</small>
-                <button onClick={loadPrompts}>Load Prompts</button>
               </div>  
             ))}
         </section>

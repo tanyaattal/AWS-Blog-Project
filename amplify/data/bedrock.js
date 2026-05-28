@@ -1,14 +1,22 @@
 export function request(ctx) {
-    const { notes = [] } = ctx.args;
+    const { notes = [], instruction = "" } = ctx.args;
   
     // Construct the prompt with the provided ingredients
-    const prompt = `Use the bullet points as source material. Write a polished personal learning blog post. Do not use the same opening every 
-        time. Use 2–4 paragraphs. Add a natural title. Make it reflective but not overly formal. 
-        Do not invent facts beyond the notes.: ${notes.join(", ")}.`;
+    const prompt = `
+            Use the bullet points as source material.
+            User instructions for tone/style: ${instruction}
+            Write a polished personal learning blog post.
+            Do not use the same opening every time.
+            Use 2–4 paragraphs.
+            Add a natural title.
+            Make it reflective but not overly formal.
+            Do not invent facts beyond the notes.
+
+            Notes: ${notes.join(", ")}`;
   
     // Return the request configuration
     return {
-      resourcePath: "/model/global.anthropic.claude-sonnet-4-5-20250929-v1:0/invoke",
+      resourcePath: "/model/anthropic.claude-sonnet-4-5-20250929-v1:0/invoke",
       method: "POST",
       params: {
         headers: {
